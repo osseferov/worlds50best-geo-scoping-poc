@@ -54,6 +54,29 @@ const findCont = name => Object.keys(GEO_DATA).find(c => Object.values(GEO_DATA[
 const findSr = (cont, name) => cont && Object.keys(GEO_DATA[cont]).find(s => GEO_DATA[cont][s].includes(name));
 const CHAIR_COLORS = ["#4F46E5","#0891B2","#059669","#D97706","#DC2626","#7C3AED","#DB2777","#2563EB"];
 
+const DEFAULT_AC = [
+  {id:"ac_1",name:"Marie Dupont",color:CHAIR_COLORS[0]},
+  {id:"ac_2",name:"James Chen",color:CHAIR_COLORS[1]},
+  {id:"ac_3",name:"Sofia Rodriguez",color:CHAIR_COLORS[2]},
+];
+const DEFAULT_VC = {
+  ac_1:[
+    {id:"vc_1a",name:"Luca Moretti",color:CHAIR_COLORS[3]},
+    {id:"vc_1b",name:"Aisha Patel",color:CHAIR_COLORS[4]},
+    {id:"vc_1c",name:"Erik Lindberg",color:CHAIR_COLORS[5]},
+  ],
+  ac_2:[
+    {id:"vc_2a",name:"Yuki Tanaka",color:CHAIR_COLORS[6]},
+    {id:"vc_2b",name:"Clara Hoffmann",color:CHAIR_COLORS[7]},
+    {id:"vc_2c",name:"Omar Benali",color:CHAIR_COLORS[0]},
+  ],
+  ac_3:[
+    {id:"vc_3a",name:"Priya Sharma",color:CHAIR_COLORS[1]},
+    {id:"vc_3b",name:"Thomas Müller",color:CHAIR_COLORS[2]},
+    {id:"vc_3c",name:"Isabella Costa",color:CHAIR_COLORS[3]},
+  ],
+};
+
 // ── Icons ──
 const ChevronR = ({s:z=16}) => <svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
 const ChevronD = ({s:z=16}) => <svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
@@ -70,6 +93,7 @@ const UserI = ({s:z=16}) => <svg width={z} height={z} viewBox="0 0 24 24" fill="
 const LayersI = ({s:z=14}) => <svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>;
 const PackageI = ({s:z=14}) => <svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>;
 const UsersI = ({s:z=16}) => <svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const GripI = ({s:z=14}) => <svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>;
 
 // ── Shared ──
 function Checkbox({state, onChange}) {
@@ -84,6 +108,44 @@ function InlineEdit({value,onSave,onCancel,placeholder="Name…",width=160}) {
 }
 function Toast({msg}) { return <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"#1E293B",color:"#fff",padding:"10px 20px",borderRadius:8,fontSize:13,zIndex:999,boxShadow:"0 4px 12px rgba(0,0,0,0.15)"}}>{msg}</div>; }
 function Bdg({children,bg,color}) { return <span style={{fontSize:10,fontWeight:700,color,background:bg,padding:"2px 7px",borderRadius:10,whiteSpace:"nowrap"}}>{children}</span>; }
+
+function SmallCheck({checked,onChange}) {
+  return <button onClick={e=>{e.stopPropagation();onChange(!checked);}} style={{width:16,height:16,borderRadius:3,border:`1.5px solid ${checked?"#4F46E5":"#CBD5E1"}`,background:checked?"#4F46E5":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,padding:0}}>{checked&&<CheckI s={10}/>}</button>;
+}
+
+function DropZone({onDrop,children,style={}}) {
+  const [over,setOver]=useState(false);
+  return <div onDragOver={e=>{e.preventDefault();setOver(true);}} onDragLeave={()=>setOver(false)} onDrop={e=>{e.preventDefault();setOver(false);onDrop(e);}} style={{...style,outline:over?"2px dashed #A5B4FC":"none",outlineOffset:-2,borderRadius:12,transition:"outline 0.15s"}}>{children}</div>;
+}
+
+function DDMenu({items,onPick,emptyMsg="No options"}) {
+  return (
+    <div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.1)",zIndex:50,minWidth:180,padding:4}} onClick={e=>e.stopPropagation()}>
+      {items.map(it=>(
+        <button key={it.id} onClick={()=>onPick(it.id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 10px",background:"none",border:"none",cursor:"pointer",fontSize:12,borderRadius:6,textAlign:"left"}} onMouseEnter={e=>e.currentTarget.style.background="#F1F5F9"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+          <span style={{width:8,height:8,borderRadius:4,background:it.color,flexShrink:0}}/>{it.name}
+        </button>
+      ))}
+      {items.length===0&&<div style={{padding:"8px 10px",fontSize:12,color:"#94A3B8"}}>{emptyMsg}</div>}
+    </div>
+  );
+}
+
+function DragChip({unit,selected=false,onToggleSelect=null,onDragStart=null,onDragEnd=null,showAssign=false,onAssignClick=null,showRemove=false,onRemove=null,borderColor=null,ddOpen=false,ddContent=null,showGrip=true,showSelect=false}) {
+  const [h,setH]=useState(false);
+  return (
+    <div draggable={showGrip} onDragStart={e=>{if(onDragStart)onDragStart(e,unit);}} onDragEnd={e=>{if(onDragEnd)onDragEnd(e);}} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 8px",background:selected?"#EEF2FF":h?"#F8FAFC":"#fff",border:selected?"1.5px solid #A5B4FC":`1px solid ${borderColor||"#E2E8F0"}`,borderRadius:8,fontSize:12,position:"relative",cursor:showGrip?"grab":"default",transition:"all 0.12s",borderLeft:borderColor?`3px solid ${borderColor}`:undefined}}>
+      {showSelect&&<SmallCheck checked={!!selected} onChange={()=>onToggleSelect(unit.id)}/>}
+      {showGrip&&<span style={{color:"#CBD5E1",cursor:"grab",display:"flex",flexShrink:0}}><GripI s={12}/></span>}
+      <span style={{flex:1,fontWeight:500,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{unit.label}</span>
+      {unit.type==="subset"&&<Bdg bg="#EEF2FF" color="#6366F1">subset</Bdg>}
+      {unit.type==="subdivision"&&<Bdg bg="#FEF3C7" color="#92400E">{unit.parent}</Bdg>}
+      {showAssign&&<button onClick={e=>{e.stopPropagation();onAssignClick();}} style={{background:"#F1F5F9",border:"1px solid #E2E8F0",borderRadius:6,padding:"3px 8px",fontSize:11,cursor:"pointer",color:"#4F46E5",fontWeight:500,flexShrink:0}}>Assign</button>}
+      {showRemove&&<button onClick={e=>{e.stopPropagation();onRemove();}} style={{background:"none",border:"none",cursor:"pointer",color:"#94A3B8",padding:2,display:"flex",flexShrink:0}}><XI s={12}/></button>}
+      {ddOpen&&ddContent}
+    </div>
+  );
+}
 
 function flattenScope(sel, subsets) {
   const units = [];
@@ -276,6 +338,7 @@ function Step2({sel,subsets,chairs,setChairs,assignments,setAssignments,onBack,o
   const [dd,setDd]=useState(null);
   const [showNew,setShowNew]=useState(false);
   const [editCh,setEditCh]=useState(null);
+  const [dragging,setDragging]=useState(null);
 
   const units=useMemo(()=>flattenScope(sel,subsets),[sel,subsets]);
   const unassigned=units.filter(u=>!assignments[u.id]);
@@ -287,49 +350,41 @@ function Step2({sel,subsets,chairs,setChairs,assignments,setAssignments,onBack,o
   const renameChair=(id,name)=>{setChairs(p=>p.map(c=>c.id===id?{...c,name}:c));setEditCh(null);};
   const total=units.length,assignedCount=units.filter(u=>assignments[u.id]).length,allDone=assignedCount===total&&total>0;
 
-  const uChip=(unit,{showAssign,showRemove,chairColor}={})=>(
-    <div key={unit.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,fontSize:12,position:"relative",borderLeft:chairColor?`3px solid ${chairColor}`:undefined}}>
-      <span style={{flex:1,fontWeight:500}}>{unit.label}</span>
-      {unit.type==="subset"&&<Bdg bg="#EEF2FF" color="#6366F1">subset</Bdg>}
-      {showAssign&&<button onClick={e=>{e.stopPropagation();setDd(dd===unit.id?null:unit.id);}} style={{background:"#F1F5F9",border:"1px solid #E2E8F0",borderRadius:6,padding:"3px 8px",fontSize:11,cursor:"pointer",color:"#4F46E5",fontWeight:500}}>Assign</button>}
-      {showRemove&&<button onClick={()=>unassign(unit.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#94A3B8",padding:2,display:"flex"}}><XI s={12}/></button>}
-      {dd===unit.id&&(
-        <div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.1)",zIndex:50,minWidth:180,padding:4}}>
-          {chairs.map(ch=>(
-            <button key={ch.id} onClick={()=>assignTo(unit.id,ch.id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 10px",background:"none",border:"none",cursor:"pointer",fontSize:12,borderRadius:6,textAlign:"left"}} onMouseEnter={e=>e.currentTarget.style.background="#F1F5F9"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
-              <span style={{width:8,height:8,borderRadius:4,background:ch.color,flexShrink:0}}/>{ch.name}
-            </button>
-          ))}
-          {chairs.length===0&&<div style={{padding:"8px 10px",fontSize:12,color:"#94A3B8"}}>Create a chair first</div>}
-        </div>
-      )}
-    </div>
-  );
+  const onDragStart=(e,unit)=>{setDragging(unit.id);e.dataTransfer.setData("text/plain",unit.id);e.dataTransfer.effectAllowed="move";};
+  const onDragEnd=()=>setDragging(null);
+  const onDropChair=(e,chairId)=>{const uid=e.dataTransfer.getData("text/plain");if(uid)assignTo(uid,chairId);setDragging(null);};
+  const onDropUnassign=(e)=>{const uid=e.dataTransfer.getData("text/plain");if(uid)unassign(uid);setDragging(null);};
 
   return (
     <div style={{display:"flex",flex:1,minHeight:0}} onClick={()=>setDd(null)}>
       <div style={{flex:"1 1 65%",display:"flex",flexDirection:"column",borderRight:"1px solid #E2E8F0",background:"#fff"}}>
-        <div style={{padding:"14px 20px",borderBottom:"1px solid #E2E8F0"}}><div style={{display:"flex",alignItems:"center",gap:8}}><UserI s={18}/><span style={{fontWeight:700,fontSize:16}}>Assign Academy Chairs</span></div><div style={{fontSize:12,color:"#64748B",marginTop:2}}>Assign each area to an Academy Chair</div></div>
+        <div style={{padding:"14px 20px",borderBottom:"1px solid #E2E8F0"}}><div style={{display:"flex",alignItems:"center",gap:8}}><UserI s={18}/><span style={{fontWeight:700,fontSize:16}}>Assign Academy Chairs</span></div><div style={{fontSize:12,color:"#64748B",marginTop:2}}>Drag areas to chairs or use the Assign button</div></div>
         <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
-          <div style={{marginBottom:20}}>
+          <DropZone onDrop={onDropUnassign} style={{marginBottom:20}}>
             <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:8}}>Unassigned ({unassigned.length})</div>
-            {unassigned.length===0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#059669"}}>All areas assigned ✓</div>}
-            <div style={{display:"flex",flexDirection:"column",gap:6}} onClick={e=>e.stopPropagation()}>{unassigned.map(u=>uChip(u,{showAssign:true}))}</div>
-          </div>
+            {unassigned.length===0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#059669"}}>All assigned ✓</div>}
+            <div style={{display:"flex",flexDirection:"column",gap:5}} onClick={e=>e.stopPropagation()}>
+              {unassigned.map(u=>(
+                <DragChip key={u.id} unit={u} onDragStart={onDragStart} onDragEnd={onDragEnd} showAssign showGrip onAssignClick={()=>setDd(dd===u.id?null:u.id)} ddOpen={dd===u.id} ddContent={<DDMenu items={chairs} onPick={cid=>assignTo(u.id,cid)} emptyMsg="Create a chair first"/>}/>
+              ))}
+            </div>
+          </DropZone>
           <div style={{display:"flex",flexWrap:"wrap",gap:16}}>
             {chairs.map(ch=>{const items=assigned(ch.id);return(
-              <div key={ch.id} style={{flex:"1 1 260px",maxWidth:340,minWidth:230,background:"#FAFBFD",border:"1px solid #E2E8F0",borderRadius:12,overflow:"hidden"}}>
+              <DropZone key={ch.id} onDrop={e=>onDropChair(e,ch.id)} style={{flex:"1 1 260px",maxWidth:340,minWidth:230,background:"#FAFBFD",border:"1px solid #E2E8F0",borderRadius:12,overflow:"hidden"}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid #E2E8F0",display:"flex",alignItems:"center",gap:8,background:`${ch.color}08`}}>
                   <span style={{width:10,height:10,borderRadius:5,background:ch.color,flexShrink:0}}/>
                   {editCh===ch.id?<InlineEdit value={ch.name} onSave={v=>renameChair(ch.id,v)} onCancel={()=>setEditCh(null)}/>:<span style={{fontWeight:600,fontSize:13,flex:1,cursor:"pointer"}} onClick={()=>setEditCh(ch.id)}>{ch.name}</span>}
                   <span style={{fontSize:11,color:"#94A3B8"}}>{items.length}</span>
                   <button onClick={()=>removeChair(ch.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#CBD5E1",padding:2,display:"flex"}}><TrashI/></button>
                 </div>
-                <div style={{padding:10,display:"flex",flexDirection:"column",gap:6,minHeight:48}}>
-                  {items.length===0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#CBD5E1"}}>No areas</div>}
-                  {items.map(u=>uChip(u,{showRemove:true,chairColor:ch.color}))}
+                <div style={{padding:10,display:"flex",flexDirection:"column",gap:5,minHeight:48}}>
+                  {items.length===0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#CBD5E1"}}>Drop areas here</div>}
+                  {items.map(u=>(
+                    <DragChip key={u.id} unit={u} onDragStart={onDragStart} onDragEnd={onDragEnd} showRemove showGrip onRemove={()=>unassign(u.id)} borderColor={ch.color}/>
+                  ))}
                 </div>
-              </div>
+              </DropZone>
             );})}
             <div style={{flex:"1 1 260px",maxWidth:340,minWidth:230}}>
               {showNew?<div style={{background:"#FAFBFD",border:"1.5px dashed #A5B4FC",borderRadius:12,padding:14}}><InlineEdit value="" onSave={addChair} onCancel={()=>setShowNew(false)} placeholder="Chair name…"/></div>:<button onClick={()=>setShowNew(true)} style={{width:"100%",padding:14,background:"transparent",border:"1.5px dashed #CBD5E1",borderRadius:12,cursor:"pointer",color:"#94A3B8",fontSize:13,fontWeight:500,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><PlusI/> Add Academy Chair</button>}
@@ -339,19 +394,19 @@ function Step2({sel,subsets,chairs,setChairs,assignments,setAssignments,onBack,o
         <div style={{padding:"10px 20px",borderTop:"1px solid #E2E8F0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <button onClick={onBack} style={{padding:"7px 14px",background:"none",border:"1px solid #E2E8F0",borderRadius:8,fontSize:13,cursor:"pointer",color:"#64748B",display:"flex",alignItems:"center",gap:6}}><ArrowL/> Back</button>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <span style={{fontSize:13,color:allDone?"#059669":"#D97706",fontWeight:500}}>{assignedCount}/{total} assigned</span>
+            <span style={{fontSize:13,color:allDone?"#059669":"#D97706",fontWeight:500}}>{assignedCount}/{total}</span>
             <button onClick={()=>{if(allDone)onNext();}} style={{padding:"8px 24px",background:allDone?"#4F46E5":"#CBD5E1",color:"#fff",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:allDone?"pointer":"default"}}>Next: Vice Chairs →</button>
           </div>
         </div>
       </div>
       <div style={{flex:"1 1 35%",display:"flex",flexDirection:"column",background:"#F8FAFC",maxWidth:360}}>
-        <div style={{padding:"14px 20px",borderBottom:"1px solid #E2E8F0"}}><div style={{fontWeight:700,fontSize:15}}>Event Scope</div><div style={{fontSize:12,color:"#64748B",marginTop:2}}>Read-only reference</div></div>
+        <div style={{padding:"14px 20px",borderBottom:"1px solid #E2E8F0"}}><div style={{fontWeight:700,fontSize:15}}>Event Scope</div><div style={{fontSize:12,color:"#64748B",marginTop:2}}>Read-only</div></div>
         <div style={{flex:1,overflowY:"auto",padding:"10px 14px"}}>
           {units.map(u=>{const ch=chairs.find(c=>c.id===assignments[u.id]);return(
             <div key={u.id} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 10px",marginBottom:3,fontSize:12,color:"#64748B",borderRadius:6,background:ch?`${ch.color}10`:"transparent"}}>
               {ch&&<span style={{width:6,height:6,borderRadius:3,background:ch.color}}/>}
               <span style={{flex:1}}>{u.label}</span>
-              {ch?<span style={{fontSize:10,color:"#94A3B8"}}>{ch.name}</span>:<span style={{fontSize:10,color:"#D97706"}}>unassigned</span>}
+              {ch?<span style={{fontSize:10,color:"#94A3B8"}}>{ch.name}</span>:<span style={{fontSize:10,color:"#D97706"}}>↗</span>}
             </div>
           );})}
         </div>
@@ -369,6 +424,8 @@ function Step3({sel,subsets,chairs,assignments,vcChairs,setVcChairs,vcAssignment
   const [showNew,setShowNew]=useState(false);
   const [editVc,setEditVc]=useState(null);
   const [expandedUnits,setExpandedUnits]=useState({}); // { unitId: expandedGranularUnits[] }
+  const [selected,setSelected]=useState(new Set());
+  const [bulkDd,setBulkDd]=useState(false);
 
   const allUnits=useMemo(()=>flattenScope(sel,subsets),[sel,subsets]);
   const chairUnits=useMemo(()=>allUnits.filter(u=>assignments[u.id]===activeChairId),[allUnits,assignments,activeChairId]);
@@ -399,12 +456,15 @@ function Step3({sel,subsets,chairs,assignments,vcChairs,setVcChairs,vcAssignment
     return ex!==null&&ex.length>1;
   };
 
+  useEffect(()=>{setSelected(new Set());setBulkDd(false);},[activeChairId]);
+
   const doExpand=u=>{
     const ex=expandUnit(u);
     if(!ex)return;
     // Remove any assignment for the parent unit
     setVcAssignments(p=>{const cur={...(p[activeChairId]||{})};delete cur[u.id];return{...p,[activeChairId]:cur};});
     setExpandedUnits(p=>({...p,[u.id]:ex}));
+    setSelected(new Set());
   };
 
   const doCollapse=u=>{
@@ -412,38 +472,31 @@ function Step3({sel,subsets,chairs,assignments,vcChairs,setVcChairs,vcAssignment
     const ex=expandedUnits[u.id]||[];
     setVcAssignments(p=>{const cur={...(p[activeChairId]||{})};ex.forEach(e=>delete cur[e.id]);return{...p,[activeChairId]:cur};});
     setExpandedUnits(p=>{const n={...p};delete n[u.id];return n;});
+    setSelected(new Set());
   };
 
   const assignTo=(uid,vcId)=>{setVcAssignments(p=>({...p,[activeChairId]:{...(p[activeChairId]||{}),[uid]:vcId}}));setDd(null);};
-  const unassign=uid=>{setVcAssignments(p=>{const cur={...(p[activeChairId]||{})};delete cur[uid];return{...p,[activeChairId]:cur};});};
+  const unassignOne=uid=>{setVcAssignments(p=>{const cur={...(p[activeChairId]||{})};delete cur[uid];return{...p,[activeChairId]:cur};});};
   const addVc=name=>{if(!name.trim())return;const id=`vc_${Date.now()}`;setVcChairs(p=>({...p,[activeChairId]:[...(p[activeChairId]||[]),{id,name:name.trim(),color:CHAIR_COLORS[((p[activeChairId]||[]).length)%CHAIR_COLORS.length]}]}));setShowNew(false);};
   const removeVc=id=>{setVcChairs(p=>({...p,[activeChairId]:(p[activeChairId]||[]).filter(v=>v.id!==id)}));setVcAssignments(p=>{const cur={...(p[activeChairId]||{})};for(const k of Object.keys(cur))if(cur[k]===id)delete cur[k];return{...p,[activeChairId]:cur};});};
   const renameVc=(id,name)=>{setVcChairs(p=>({...p,[activeChairId]:(p[activeChairId]||[]).map(v=>v.id===id?{...v,name}:v)}));setEditVc(null);};
+  const toggleSelect=uid=>{setSelected(p=>{const n=new Set(p);n.has(uid)?n.delete(uid):n.add(uid);return n;});};
+  const selectAll=()=>setSelected(new Set(unassigned.map(u=>u.id)));
+  const deselectAll=()=>setSelected(new Set());
+  const bulkAssign=vcId=>{selected.forEach(uid=>assignTo(uid,vcId));setSelected(new Set());setBulkDd(false);};
 
   const totalU=assignableUnits.length,assignedCount=assignableUnits.filter(u=>myAss[u.id]).length,allDone=assignedCount===totalU&&totalU>0;
 
   // Is a unit the parent of currently expanded children?
   const isParentExpanded=uid=>!!expandedUnits[uid];
 
-  const uChip=(unit,{showAssign,showRemove,vcColor,parentUnit}={})=>(
-    <div key={unit.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,fontSize:12,position:"relative",borderLeft:vcColor?`3px solid ${vcColor}`:undefined}}>
-      <span style={{flex:1,fontWeight:500}}>{unit.label}</span>
-      {unit.type==="subset"&&<Bdg bg="#EEF2FF" color="#6366F1">subset</Bdg>}
-      {unit.type==="subdivision"&&<Bdg bg="#FEF3C7" color="#92400E">{unit.parent}</Bdg>}
-      {showAssign&&<button onClick={e=>{e.stopPropagation();setDd(dd===unit.id?null:unit.id);}} style={{background:"#F1F5F9",border:"1px solid #E2E8F0",borderRadius:6,padding:"3px 8px",fontSize:11,cursor:"pointer",color:"#4F46E5",fontWeight:500}}>Assign</button>}
-      {showRemove&&<button onClick={()=>unassign(unit.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#94A3B8",padding:2,display:"flex"}}><XI s={12}/></button>}
-      {dd===unit.id&&(
-        <div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.1)",zIndex:50,minWidth:180,padding:4}}>
-          {myVcs.map(vc=>(
-            <button key={vc.id} onClick={()=>assignTo(unit.id,vc.id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 10px",background:"none",border:"none",cursor:"pointer",fontSize:12,borderRadius:6,textAlign:"left"}} onMouseEnter={e=>e.currentTarget.style.background="#F1F5F9"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
-              <span style={{width:8,height:8,borderRadius:4,background:vc.color,flexShrink:0}}/>{vc.name}
-            </button>
-          ))}
-          {myVcs.length===0&&<div style={{padding:"8px 10px",fontSize:12,color:"#94A3B8"}}>Create a Vice Chair first</div>}
-        </div>
-      )}
-    </div>
-  );
+  const onDragStart=(e,unit)=>{
+    if(selected.size>0&&selected.has(unit.id)){e.dataTransfer.setData("text/plain",JSON.stringify([...selected]));}
+    else{e.dataTransfer.setData("text/plain",JSON.stringify([unit.id]));}
+    e.dataTransfer.effectAllowed="move";
+  };
+  const onDropVc=(e,vcId)=>{try{const ids=JSON.parse(e.dataTransfer.getData("text/plain"));ids.forEach(uid=>assignTo(uid,vcId));setSelected(new Set());}catch{}};
+  const onDropUnassign=(e)=>{try{const ids=JSON.parse(e.dataTransfer.getData("text/plain"));ids.forEach(uid=>unassignOne(uid));setSelected(new Set());}catch{}};
 
   return (
     <div style={{display:"flex",flex:1,minHeight:0}} onClick={()=>setDd(null)}>
@@ -476,14 +529,36 @@ function Step3({sel,subsets,chairs,assignments,vcChairs,setVcChairs,vcAssignment
         {!activeChair&&<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"#94A3B8",fontSize:13}}>No Academy Chair selected</div>}
 
         {activeChair&&<div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
-          {/* Unassigned pool */}
-          <div style={{marginBottom:20}}>
+          <DropZone onDrop={onDropUnassign} style={{marginBottom:20}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
               <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:"0.05em"}}>Unassigned ({unassigned.length})</div>
+              <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                {unassigned.length>1&&(
+                  <button onClick={selected.size===unassigned.length?deselectAll:selectAll} style={{fontSize:11,color:"#6366F1",background:"none",border:"none",cursor:"pointer",fontWeight:500}}>
+                    {selected.size===unassigned.length?"Deselect all":"Select all"}
+                  </button>
+                )}
+                {selected.size>0&&(
+                  <div style={{position:"relative"}} onClick={e=>e.stopPropagation()}>
+                    <button onClick={()=>setBulkDd(!bulkDd)} style={{padding:"4px 12px",background:"#4F46E5",color:"#fff",border:"none",borderRadius:6,fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+                      Assign {selected.size} →
+                    </button>
+                    {bulkDd&&(
+                      <div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.1)",zIndex:50,minWidth:180,padding:4}}>
+                        {myVcs.map(vc=>(
+                          <button key={vc.id} onClick={()=>bulkAssign(vc.id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 10px",background:"none",border:"none",cursor:"pointer",fontSize:12,borderRadius:6}} onMouseEnter={e=>e.currentTarget.style.background="#F1F5F9"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                            <span style={{width:8,height:8,borderRadius:4,background:vc.color}}/>{vc.name}
+                          </button>
+                        ))}
+                        {myVcs.length===0&&<div style={{padding:"8px 10px",fontSize:12,color:"#94A3B8"}}>Create a Vice Chair first</div>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-            {unassigned.length===0&&assignableUnits.length>0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#059669"}}>All areas assigned ✓</div>}
-            <div style={{display:"flex",flexDirection:"column",gap:6}} onClick={e=>e.stopPropagation()}>
-              {/* Show original chair units with expand/collapse option */}
+            {unassigned.length===0&&assignableUnits.length>0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#059669"}}>All assigned ✓</div>}
+            <div style={{display:"flex",flexDirection:"column",gap:4}} onClick={e=>e.stopPropagation()}>
               {chairUnits.map(u=>{
                 const isExp=isParentExpanded(u.id);
                 const canExp=canExpand(u);
@@ -491,62 +566,58 @@ function Step3({sel,subsets,chairs,assignments,vcChairs,setVcChairs,vcAssignment
                 const unassignedChildren=granularChildren.filter(g=>!myAss[g.id]);
 
                 if(isExp){
-                  // Show collapsed header + expanded children
                   return(
                     <div key={u.id}>
                       <div style={{display:"flex",alignItems:"center",gap:8,padding:"5px 10px",background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:8,fontSize:12,marginBottom:4}}>
                         <button onClick={()=>doCollapse(u)} style={{background:"none",border:"none",cursor:"pointer",padding:0,color:"#94A3B8",display:"flex"}}><ChevronD s={14}/></button>
                         <span style={{fontWeight:600,flex:1}}>{u.label}</span>
-                        <Bdg bg="#FEF3C7" color="#92400E">{granularChildren.length} sub-units</Bdg>
+                        <Bdg bg="#FEF3C7" color="#92400E">{granularChildren.length} items</Bdg>
                       </div>
-                      <div style={{marginLeft:20,display:"flex",flexDirection:"column",gap:4}}>
-                        {unassignedChildren.map(g=>uChip(g,{showAssign:true}))}
+                      <div style={{marginLeft:16,display:"flex",flexDirection:"column",gap:3}}>
+                        {unassignedChildren.map(g=>(
+                          <DragChip key={g.id} unit={g} selected={selected.has(g.id)} onToggleSelect={()=>toggleSelect(g.id)} showSelect showAssign showGrip onDragStart={onDragStart} onAssignClick={()=>setDd(dd===g.id?null:g.id)} ddOpen={dd===g.id} ddContent={<DDMenu items={myVcs} onPick={vcId=>assignTo(g.id,vcId)} emptyMsg="Create a VC first"/>}/>
+                        ))}
                       </div>
                     </div>
                   );
                 }
 
-                // Not expanded — show as regular chip with expand button
                 if(!myAss[u.id]){
                   return(
-                    <div key={u.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,fontSize:12,position:"relative"}}>
-                      <span style={{flex:1,fontWeight:500}}>{u.label}</span>
-                      {u.type==="subset"&&<Bdg bg="#EEF2FF" color="#6366F1">subset</Bdg>}
-                      {canExp&&<button onClick={e=>{e.stopPropagation();doExpand(u);}} style={{background:"none",border:"1px solid #E2E8F0",borderRadius:6,padding:"2px 8px",fontSize:11,color:"#D97706",cursor:"pointer",fontWeight:500,display:"inline-flex",alignItems:"center",gap:3}}><LayersI s={10}/> Split</button>}
-                      <button onClick={e=>{e.stopPropagation();setDd(dd===u.id?null:u.id);}} style={{background:"#F1F5F9",border:"1px solid #E2E8F0",borderRadius:6,padding:"3px 8px",fontSize:11,cursor:"pointer",color:"#4F46E5",fontWeight:500}}>Assign</button>
-                      {dd===u.id&&(
-                        <div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.1)",zIndex:50,minWidth:180,padding:4}}>
-                          {myVcs.map(vc=>(
-                            <button key={vc.id} onClick={()=>assignTo(u.id,vc.id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 10px",background:"none",border:"none",cursor:"pointer",fontSize:12,borderRadius:6,textAlign:"left"}} onMouseEnter={e=>e.currentTarget.style.background="#F1F5F9"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
-                              <span style={{width:8,height:8,borderRadius:4,background:vc.color,flexShrink:0}}/>{vc.name}
-                            </button>
-                          ))}
-                          {myVcs.length===0&&<div style={{padding:"8px 10px",fontSize:12,color:"#94A3B8"}}>Create a Vice Chair first</div>}
-                        </div>
-                      )}
-                    </div>
+                    <DragChip key={u.id} unit={u} selected={selected.has(u.id)} onToggleSelect={()=>toggleSelect(u.id)} showSelect showGrip onDragStart={onDragStart} showAssign onAssignClick={()=>setDd(dd===u.id?null:u.id)} ddOpen={dd===u.id} ddContent={
+                      <div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:"#fff",border:"1px solid #E2E8F0",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.1)",zIndex:50,minWidth:200,padding:4}}>
+                        {canExp&&<button onClick={e=>{e.stopPropagation();doExpand(u);setDd(null);}} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 10px",background:"none",border:"none",cursor:"pointer",fontSize:12,borderRadius:6,color:"#D97706"}} onMouseEnter={e=>e.currentTarget.style.background="#F1F5F9"} onMouseLeave={e=>e.currentTarget.style.background="none"}><LayersI s={11}/> Split into sub-units</button>}
+                        {myVcs.map(vc=>(
+                          <button key={vc.id} onClick={()=>assignTo(u.id,vc.id)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 10px",background:"none",border:"none",cursor:"pointer",fontSize:12,borderRadius:6}} onMouseEnter={e=>e.currentTarget.style.background="#F1F5F9"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                            <span style={{width:8,height:8,borderRadius:4,background:vc.color,flexShrink:0}}/>{vc.name}
+                          </button>
+                        ))}
+                        {myVcs.length===0&&<div style={{padding:"8px 10px",fontSize:12,color:"#94A3B8"}}>Create a VC first</div>}
+                      </div>
+                    }/>
                   );
                 }
-                return null; // already assigned, shown in VC column
+                return null;
               })}
             </div>
-          </div>
+          </DropZone>
 
-          {/* Vice Chair columns */}
           <div style={{display:"flex",flexWrap:"wrap",gap:16}}>
             {myVcs.map(vc=>{const items=assignedTo(vc.id);return(
-              <div key={vc.id} style={{flex:"1 1 260px",maxWidth:340,minWidth:230,background:"#FAFBFD",border:"1px solid #E2E8F0",borderRadius:12,overflow:"hidden"}}>
+              <DropZone key={vc.id} onDrop={e=>onDropVc(e,vc.id)} style={{flex:"1 1 260px",maxWidth:340,minWidth:230,background:"#FAFBFD",border:"1px solid #E2E8F0",borderRadius:12,overflow:"hidden"}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid #E2E8F0",display:"flex",alignItems:"center",gap:8,background:`${vc.color}08`}}>
                   <span style={{width:10,height:10,borderRadius:5,background:vc.color,flexShrink:0}}/>
                   {editVc===vc.id?<InlineEdit value={vc.name} onSave={v=>renameVc(vc.id,v)} onCancel={()=>setEditVc(null)}/>:<span style={{fontWeight:600,fontSize:13,flex:1,cursor:"pointer"}} onClick={()=>setEditVc(vc.id)}>{vc.name}</span>}
                   <span style={{fontSize:11,color:"#94A3B8"}}>{items.length}</span>
                   <button onClick={()=>removeVc(vc.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#CBD5E1",padding:2,display:"flex"}}><TrashI/></button>
                 </div>
-                <div style={{padding:10,display:"flex",flexDirection:"column",gap:6,minHeight:48}}>
-                  {items.length===0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#CBD5E1"}}>No areas</div>}
-                  {items.map(u=>uChip(u,{showRemove:true,vcColor:vc.color}))}
+                <div style={{padding:10,display:"flex",flexDirection:"column",gap:5,minHeight:48}}>
+                  {items.length===0&&<div style={{padding:12,textAlign:"center",fontSize:12,color:"#CBD5E1"}}>Drop here</div>}
+                  {items.map(u=>(
+                    <DragChip key={u.id} unit={u} showRemove showGrip onDragStart={onDragStart} onRemove={()=>unassignOne(u.id)} borderColor={vc.color}/>
+                  ))}
                 </div>
-              </div>
+              </DropZone>
             );})}
             <div style={{flex:"1 1 260px",maxWidth:340,minWidth:230}}>
               {showNew?<div style={{background:"#FAFBFD",border:"1.5px dashed #A5B4FC",borderRadius:12,padding:14}}><InlineEdit value="" onSave={addVc} onCancel={()=>setShowNew(false)} placeholder="Vice Chair name…"/></div>:<button onClick={()=>setShowNew(true)} style={{width:"100%",padding:14,background:"transparent",border:"1.5px dashed #CBD5E1",borderRadius:12,cursor:"pointer",color:"#94A3B8",fontSize:13,fontWeight:500,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><PlusI/> Add Vice Chair</button>}
@@ -616,9 +687,9 @@ export default function App() {
   const [step,setStep]=useState(1);
   const [sel,setSel]=useState(new Set());
   const [subsets,setSubsets]=useState([]);
-  const [chairs,setChairs]=useState([]);
+  const [chairs,setChairs]=useState(DEFAULT_AC);
   const [assignments,setAssignments]=useState({});
-  const [vcChairs,setVcChairs]=useState({}); // { chairId: [{id,name,color}] }
+  const [vcChairs,setVcChairs]=useState(DEFAULT_VC); // { chairId: [{id,name,color}] }
   const [vcAssignments,setVcAssignments]=useState({}); // { chairId: { unitId: vcId } }
 
   return (
